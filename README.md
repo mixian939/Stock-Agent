@@ -18,3 +18,5 @@ python -m pytest stock_agent/tests/ -v    # 27 个测试
 ```
 
 ---
+
+## 项目具体描述详见PROJET_REPORT.md
