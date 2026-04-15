@@ -1,6 +1,6 @@
 ## 运行方式
 ### 需要安装Node.js
-### Python环境可以终端运行pip install requirements.txt
+### Python必需包可以终端运行pip install requirements.txt
 ```bash
 # 1. 无头回测（纯策略，秒级完成）
 python -m stock_agent.run_backtest --headless
