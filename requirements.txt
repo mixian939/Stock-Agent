@@ -1,0 +1,21 @@
+# stock_agent 依赖
+# 安装: pip install -r requirements.txt
+
+# Web 框架
+fastapi>=0.115.0
+uvicorn>=0.24.0
+pydantic>=2.0
+
+# AI / Agent
+agno>=2.5.17
+openai>=1.82.0
+
+# 数据获取
+tushare>=1.4.24
+jqdatasdk>=1.9.8
+
+# 数据处理
+pandas>=2.0
+numpy>=2.0
+
+# 前端依赖见 frontend/package.json，使用 pnpm install 安装
