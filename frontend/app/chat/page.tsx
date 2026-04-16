@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useEffect, useRef, useState } from "react";
 import { api } from "@/lib/api";
 
 interface Message {
@@ -10,7 +10,11 @@ interface Message {
 
 export default function ChatPage() {
   const [messages, setMessages] = useState<Message[]>([
-    { role: "assistant", content: "你好！我是 ETF 动量轮动交易 Agent。你可以向我询问策略、持仓、绩效等问题，或让我分析市场。" },
+    {
+      role: "assistant",
+      content:
+        "我是主交易 Agent（gpt-5.4）。你可以问我策略、持仓、绩效和 ETF 轮动逻辑。回测模式下，系统还会接入本地 LM Studio 金融子 Agent 提供建议。",
+    },
   ]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
@@ -42,50 +46,66 @@ export default function ChatPage() {
   }
 
   return (
-    <div className="max-w-3xl mx-auto flex flex-col h-[calc(100vh-3.5rem)]">
-      {/* 消息列表 */}
-      <div className="flex-1 overflow-y-auto px-4 py-6 space-y-4">
-        {messages.map((m, i) => (
-          <div key={i} className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}>
-            <div
-              className={`max-w-[80%] rounded-xl px-4 py-2.5 text-sm leading-relaxed whitespace-pre-wrap ${
-                m.role === "user"
-                  ? "bg-indigo-600 text-white"
-                  : "bg-white border border-slate-200 text-slate-700 shadow-sm"
-              }`}
-            >
-              {m.content}
-            </div>
-          </div>
-        ))}
-        {loading && (
-          <div className="flex justify-start">
-            <div className="bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-400 animate-pulse shadow-sm">
-              思考中...
-            </div>
-          </div>
-        )}
-        <div ref={endRef} />
-      </div>
+    <div className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(20,83,45,0.12),_transparent_26%),linear-gradient(180deg,_#f8fafc_0%,_#eef2ff_100%)]">
+      <div className="mx-auto flex max-w-4xl flex-col gap-4 px-4 py-6">
+        <section className="rounded-[30px] border border-emerald-100 bg-[linear-gradient(135deg,_rgba(15,23,42,0.98),_rgba(20,83,45,0.92)_55%,_rgba(14,116,144,0.86))] p-5 text-white shadow-[0_24px_80px_rgba(15,23,42,0.16)]">
+          <div className="text-xs uppercase tracking-[0.22em] text-emerald-200/80">Chat</div>
+          <h1 className="mt-2 text-2xl font-semibold">主 Agent 交互面板</h1>
+          <p className="mt-3 max-w-2xl text-sm leading-6 text-emerald-50/90">
+            这里直接连接主 Agent。回测调仓时，主 Agent 会参考本地 LM Studio 金融子 Agent 的建议，并按 60/40 加权评分做最终裁决。
+          </p>
+        </section>
 
-      {/* 输入框 */}
-      <div className="border-t border-slate-200 p-4">
-        <div className="flex gap-2">
-          <input
-            className="flex-1 bg-white border border-slate-300 rounded-lg px-4 py-2.5 text-sm text-slate-800 outline-none focus:border-indigo-500 transition placeholder:text-slate-400"
-            placeholder="输入消息... (如: 查看动量排名)"
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && send()}
-            disabled={loading}
-          />
-          <button
-            onClick={send}
-            disabled={loading || !input.trim()}
-            className="bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed text-white px-5 py-2.5 rounded-lg text-sm font-medium transition"
-          >
-            发送
-          </button>
+        <div className="flex h-[calc(100vh-14rem)] flex-col rounded-[30px] border border-white/60 bg-white/86 shadow-[0_16px_45px_rgba(15,23,42,0.08)] backdrop-blur">
+          <div className="border-b border-slate-200/80 px-5 py-4">
+            <div className="text-[11px] uppercase tracking-[0.18em] text-slate-500">Conversation</div>
+            <div className="mt-1 text-sm text-slate-600">可提问示例：查看当前策略逻辑、解释某个 ETF、总结绩效、分析调仓思路。</div>
+          </div>
+
+          <div className="flex-1 overflow-y-auto px-4 py-6 space-y-4">
+            {messages.map((message, i) => (
+              <div key={i} className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}>
+                <div
+                  className={`max-w-[82%] rounded-2xl px-4 py-3 text-sm leading-relaxed whitespace-pre-wrap ${
+                    message.role === "user"
+                      ? "bg-slate-950 text-white shadow-[0_12px_30px_rgba(15,23,42,0.18)]"
+                      : "border border-slate-200 bg-white text-slate-700 shadow-sm"
+                  }`}
+                >
+                  {message.content}
+                </div>
+              </div>
+            ))}
+
+            {loading && (
+              <div className="flex justify-start">
+                <div className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-400 shadow-sm animate-pulse">
+                  思考中...
+                </div>
+              </div>
+            )}
+            <div ref={endRef} />
+          </div>
+
+          <div className="border-t border-slate-200/80 p-4">
+            <div className="flex gap-2">
+              <input
+                className="flex-1 rounded-2xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-emerald-500"
+                placeholder="输入消息，例如：解释双 Agent 调仓逻辑"
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && send()}
+                disabled={loading}
+              />
+              <button
+                onClick={send}
+                disabled={loading || !input.trim()}
+                className="rounded-2xl bg-emerald-700 px-5 py-3 text-sm font-medium text-white transition hover:bg-emerald-600 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                发送
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     </div>

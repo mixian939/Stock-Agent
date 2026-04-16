@@ -91,3 +91,12 @@ def decision_history():
     if state is None:
         raise HTTPException(503, "回测尚未完成")
     return state.logger.decision_log
+
+
+@router.get("/data-sources")
+def data_sources():
+    """ETF 数据来源摘要"""
+    state = get_state()
+    if state is None:
+        raise HTTPException(503, "回测尚未完成")
+    return state.data_sources

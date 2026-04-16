@@ -1,21 +1,10 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import Link from "next/link";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
-
 export const metadata: Metadata = {
   title: "ETF 动量轮动交易系统",
-  description: "Agent 量化交易系统 - 仪表盘 & 聊天",
+  description: "ETF 动量轮动 + 双 Agent 调仓决策系统",
 };
 
 export default function RootLayout({
@@ -24,21 +13,18 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html
-      lang="zh-CN"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
-    >
+    <html lang="zh-CN" className="h-full antialiased">
       <body className="min-h-full flex flex-col bg-slate-50 text-slate-800">
-        <nav className="border-b border-slate-200 bg-white/80 backdrop-blur sticky top-0 z-50">
-          <div className="max-w-7xl mx-auto px-4 h-14 flex items-center gap-6">
+        <nav className="sticky top-0 z-50 border-b border-slate-200 bg-white/80 backdrop-blur">
+          <div className="mx-auto flex h-14 max-w-7xl items-center gap-6 px-4">
             <span className="font-bold text-lg tracking-tight text-slate-900">ETF 动量轮动</span>
-            <Link href="/" className="text-sm text-slate-500 hover:text-slate-900 transition">
+            <Link href="/" className="text-sm text-slate-500 transition hover:text-slate-900">
               仪表盘
             </Link>
-            <Link href="/chat" className="text-sm text-slate-500 hover:text-slate-900 transition">
-              Agent 聊天
+            <Link href="/chat" className="text-sm text-slate-500 transition hover:text-slate-900">
+              主 Agent 聊天
             </Link>
-            <Link href="/compare" className="text-sm text-slate-500 hover:text-slate-900 transition">
+            <Link href="/compare" className="text-sm text-slate-500 transition hover:text-slate-900">
               策略对比
             </Link>
           </div>

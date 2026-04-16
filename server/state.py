@@ -19,6 +19,7 @@ class BacktestState:
     tracker: PerformanceTracker
     logger: TradingLogger
     last_prices: dict[str, float] = field(default_factory=dict)
+    data_sources: dict[str, str] = field(default_factory=dict)
 
 
 @dataclass
@@ -66,6 +67,7 @@ def run_headless_and_store() -> BacktestState:
         tracker=sim.tracker,
         logger=sim.logger,
         last_prices=_extract_last_prices(sim.feed),
+        data_sources=sim.fetcher.sources_by_code,
     )
     _dual.headless = state
     return state
@@ -93,6 +95,7 @@ def run_agent_and_store():
             tracker=sim.tracker,
             logger=sim.logger,
             last_prices=_extract_last_prices(sim.feed),
+            data_sources=headless.data_sources,
         )
         _dual.agent = state
         _dual.agent_status = "completed"

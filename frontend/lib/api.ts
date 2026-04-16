@@ -60,7 +60,19 @@ export interface DrawdownPoint {
   drawdown: number;
 }
 
-// --- 对比相关接口 ---
+export interface DashboardDecision {
+  date: string;
+  target_weights: Record<string, number>;
+  reasoning: string;
+  decision_mode?: string;
+  execution_status?: string;
+  should_rebalance?: boolean;
+  score_weights?: {
+    sub_agent: number;
+    main_agent: number;
+  };
+  weighted_scores?: Record<string, number>;
+}
 
 export interface CompareStatus {
   headless_ready: boolean;
@@ -94,6 +106,33 @@ export interface DecisionSide {
   reasoning: string;
 }
 
+export interface AgentAdvice {
+  agent_name: string;
+  model_id: string;
+  source: string;
+  should_rebalance: boolean;
+  weights: Record<string, number>;
+  scores: Record<string, number>;
+  summary: string;
+  reasoning: string;
+  raw_content?: string;
+}
+
+export interface AiDecisionSide extends DecisionSide {
+  decision_mode?: string;
+  execution_status?: string;
+  should_rebalance?: boolean;
+  algorithm_recommended_weights?: Record<string, number>;
+  current_weights_before?: Record<string, number>;
+  score_weights?: {
+    sub_agent: number;
+    main_agent: number;
+  };
+  sub_agent?: AgentAdvice | null;
+  main_agent?: AgentAdvice | null;
+  weighted_scores?: Record<string, number>;
+}
+
 export interface MomentumRanking {
   ts_code: string;
   name: string;
@@ -103,7 +142,7 @@ export interface MomentumRanking {
 export interface DecisionComparison {
   date: string;
   algo: DecisionSide | null;
-  ai: DecisionSide | null;
+  ai: AiDecisionSide | null;
   momentum_rankings: MomentumRanking[];
   decisions_match: boolean;
   weight_diffs: WeightDiff[];
@@ -120,6 +159,8 @@ export const api = {
   trades: () => fetchJSON<Trade[]>("/dashboard/trade-history"),
   metrics: () => fetchJSON<Metrics>("/dashboard/performance-metrics"),
   drawdown: () => fetchJSON<DrawdownPoint[]>("/dashboard/drawdown-curve"),
+  decisionHistory: () => fetchJSON<DashboardDecision[]>("/dashboard/decision-history"),
+  dataSources: () => fetchJSON<Record<string, string>>("/dashboard/data-sources"),
   chat: async (message: string): Promise<string> => {
     const res = await fetch(`${BASE}/chat`, {
       method: "POST",
@@ -131,7 +172,6 @@ export const api = {
     return data.reply;
   },
 
-  // --- 对比 API ---
   compareStatus: () => fetchJSON<CompareStatus>("/compare/status"),
   compareNav: () => fetchJSON<CompareNavPoint[]>("/compare/nav"),
   compareMetrics: () => fetchJSON<CompareMetrics>("/compare/metrics"),
