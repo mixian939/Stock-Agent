@@ -6,14 +6,15 @@ from stock_agent.config import REBALANCE_WEEKDAY, BACKTEST_START
 
 
 class MarketFeed:
-    def __init__(self, all_data: dict[str, pd.DataFrame]):
+    def __init__(self, all_data: dict[str, pd.DataFrame], backtest_start: str | None = None):
         self._all_data = all_data
+        self._backtest_start = backtest_start or BACKTEST_START
         self._trading_dates = self._build_calendar()
         self._cursor = -1  # advance() 之后从 0 开始
 
     def _build_calendar(self) -> list[pd.Timestamp]:
         """合并所有 ETF 的交易日期，仅保留回测起始日之后的日期"""
-        backtest_start = pd.Timestamp(BACKTEST_START)
+        backtest_start = pd.Timestamp(self._backtest_start)
         dates = set()
         for df in self._all_data.values():
             dates.update(pd.to_datetime(df["trade_date"]).tolist())

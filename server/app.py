@@ -8,9 +8,10 @@ import threading
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 
-from stock_agent.server.state import run_headless_and_store, run_agent_and_store, get_state, get_dual_state
+from stock_agent.server.state import run_headless_and_store, run_agent_and_store, get_state, get_dual_state, reset_state
 from stock_agent.server.dashboard_routes import router as dashboard_router
 from stock_agent.server.compare_routes import router as compare_router
 from stock_agent.agent.tools import TradingToolkit
@@ -83,6 +84,38 @@ def chat(req: ChatRequest):
     response = agent.run(req.message)
     content = response.content if response else "Agent 未返回响应"
     return ChatResponse(reply=content)
+
+
+_backtest_lock = threading.Lock()
+
+
+class BacktestRequest(BaseModel):
+    backtest_start: str | None = None
+    data_end: str | None = None
+
+
+def _run_full_backtest(backtest_start: str | None, data_end: str | None):
+    """后台线程：依次运行 headless + agent 回测"""
+    global _agent
+    try:
+        run_headless_and_store(backtest_start=backtest_start, data_end=data_end)
+        _agent = None
+        run_agent_and_store(backtest_start=backtest_start, data_end=data_end)
+    finally:
+        _backtest_lock.release()
+
+
+@app.post("/api/backtest/run")
+def run_backtest(req: BacktestRequest):
+    if not _backtest_lock.acquire(blocking=False):
+        return JSONResponse(status_code=409, content={"detail": "回测正在运行中，请等待完成"})
+    reset_state()
+    threading.Thread(
+        target=_run_full_backtest,
+        args=(req.backtest_start, req.data_end),
+        daemon=True,
+    ).start()
+    return {"status": "started"}
 
 
 @app.get("/api/health")

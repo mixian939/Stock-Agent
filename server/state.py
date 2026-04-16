@@ -54,11 +54,20 @@ def _extract_last_prices(feed: MarketFeed) -> dict[str, float]:
     return last_prices
 
 
-def run_headless_and_store() -> BacktestState:
+def reset_state():
+    """重置全局状态，用于重新回测前清理"""
+    global _dual
+    _dual = DualBacktestState()
+
+
+def run_headless_and_store(
+    backtest_start: str | None = None,
+    data_end: str | None = None,
+) -> BacktestState:
     """运行 headless 回测并保存结果"""
     from stock_agent.backtest.simulator import BacktestSimulator
 
-    sim = BacktestSimulator()
+    sim = BacktestSimulator(backtest_start=backtest_start, data_end=data_end)
     sim.run_headless()
 
     state = BacktestState(
@@ -73,7 +82,10 @@ def run_headless_and_store() -> BacktestState:
     return state
 
 
-def run_agent_and_store():
+def run_agent_and_store(
+    backtest_start: str | None = None,
+    data_end: str | None = None,
+):
     """运行 agent 回测并保存结果（设计为在后台线程中调用）"""
     from stock_agent.backtest.simulator import BacktestSimulator
 
@@ -84,9 +96,9 @@ def run_agent_and_store():
             raise RuntimeError("Headless 回测尚未完成")
 
         # 复用 headless 的市场数据（只读），创建独立的引擎组件
-        sim = BacktestSimulator()
+        sim = BacktestSimulator(backtest_start=backtest_start, data_end=data_end)
         sim.all_data = headless.feed._all_data
-        sim.feed = MarketFeed(sim.all_data)
+        sim.feed = MarketFeed(sim.all_data, backtest_start=backtest_start)
         sim.run_agent()
 
         state = BacktestState(

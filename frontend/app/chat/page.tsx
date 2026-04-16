@@ -13,7 +13,7 @@ export default function ChatPage() {
     {
       role: "assistant",
       content:
-        "我是主交易 Agent（gpt-5.4）。你可以问我策略、持仓、绩效和 ETF 轮动逻辑。回测模式下，系统还会接入本地 LM Studio 金融子 Agent 提供建议。",
+        "您好，我是主交易 Agent（GPT-5.4）。您可以就策略逻辑、当前持仓、绩效表现及 ETF 轮动机制进行提问。在回测模式下，系统将同时接入金融子 Agent（Fin-R1）提供辅助分析。",
     },
   ]);
   const [input, setInput] = useState("");
@@ -38,7 +38,7 @@ export default function ChatPage() {
     } catch {
       setMessages((prev) => [
         ...prev,
-        { role: "assistant", content: "请求失败，请检查后端是否正常运行。" },
+        { role: "assistant", content: "请求失败，请确认后端服务是否正常运行。" },
       ]);
     } finally {
       setLoading(false);
@@ -49,17 +49,17 @@ export default function ChatPage() {
     <div className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(20,83,45,0.12),_transparent_26%),linear-gradient(180deg,_#f8fafc_0%,_#eef2ff_100%)]">
       <div className="mx-auto flex max-w-4xl flex-col gap-4 px-4 py-6">
         <section className="rounded-[30px] border border-emerald-100 bg-[linear-gradient(135deg,_rgba(15,23,42,0.98),_rgba(20,83,45,0.92)_55%,_rgba(14,116,144,0.86))] p-5 text-white shadow-[0_24px_80px_rgba(15,23,42,0.16)]">
-          <div className="text-xs uppercase tracking-[0.22em] text-emerald-200/80">Chat</div>
-          <h1 className="mt-2 text-2xl font-semibold">主 Agent 交互面板</h1>
+          <div className="text-xs uppercase tracking-[0.22em] text-emerald-200/80">Agent Dialog</div>
+          <h1 className="mt-2 text-2xl font-semibold">交易 Agent 对话终端</h1>
           <p className="mt-3 max-w-2xl text-sm leading-6 text-emerald-50/90">
-            这里直接连接主 Agent。回测调仓时，主 Agent 会参考本地 LM Studio 金融子 Agent 的建议，并按 60/40 加权评分做最终裁决。
+            与主 Agent（GPT-5.4）直接交互。调仓决策时，主 Agent 将参考金融子 Agent（Fin-R1）的分析建议，并按 60/40 权重综合评分后做出最终裁决。
           </p>
         </section>
 
         <div className="flex h-[calc(100vh-14rem)] flex-col rounded-[30px] border border-white/60 bg-white/86 shadow-[0_16px_45px_rgba(15,23,42,0.08)] backdrop-blur">
           <div className="border-b border-slate-200/80 px-5 py-4">
             <div className="text-[11px] uppercase tracking-[0.18em] text-slate-500">Conversation</div>
-            <div className="mt-1 text-sm text-slate-600">可提问示例：查看当前策略逻辑、解释某个 ETF、总结绩效、分析调仓思路。</div>
+            <div className="mt-1 text-sm text-slate-600">示例问题：当前策略的轮动逻辑、某只 ETF 的持仓依据、近期绩效分析、调仓决策思路。</div>
           </div>
 
           <div className="flex-1 overflow-y-auto px-4 py-6 space-y-4">
@@ -80,7 +80,7 @@ export default function ChatPage() {
             {loading && (
               <div className="flex justify-start">
                 <div className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-400 shadow-sm animate-pulse">
-                  思考中...
+                  正在分析...
                 </div>
               </div>
             )}
@@ -91,7 +91,7 @@ export default function ChatPage() {
             <div className="flex gap-2">
               <input
                 className="flex-1 rounded-2xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-emerald-500"
-                placeholder="输入消息，例如：解释双 Agent 调仓逻辑"
+                placeholder="输入问题，如：当前持仓的调仓依据是什么？"
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && send()}

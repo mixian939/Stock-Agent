@@ -4,7 +4,7 @@ import Link from "next/link";
 
 export const metadata: Metadata = {
   title: "ETF 动量轮动交易系统",
-  description: "ETF 动量轮动 + 双 Agent 调仓决策系统",
+  description: "基于动量因子的 ETF 轮动策略，结合双 Agent 协同完成智能调仓决策",
 };
 
 export default function RootLayout({
@@ -22,7 +22,7 @@ export default function RootLayout({
               仪表盘
             </Link>
             <Link href="/chat" className="text-sm text-slate-500 transition hover:text-slate-900">
-              主 Agent 聊天
+              Agent 对话
             </Link>
             <Link href="/compare" className="text-sm text-slate-500 transition hover:text-slate-900">
               策略对比

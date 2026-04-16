@@ -29,11 +29,11 @@ function formatDate(d: unknown) {
   return s;
 }
 
-function formatWeights(weights: Record<string, number>) {
+function formatWeights(weights: Record<string, number>, nameMap?: Record<string, string>) {
   return Object.entries(weights)
     .filter(([, w]) => w > 0)
     .sort(([, a], [, b]) => b - a)
-    .map(([code, w]) => `${code.split(".")[0]} ${(w * 100).toFixed(0)}%`)
+    .map(([code, w]) => `${nameMap?.[code] ?? code.split(".")[0]} ${(w * 100).toFixed(0)}%`)
     .join(", ");
 }
 
@@ -43,11 +43,11 @@ function MetricPair({ label, algoVal, aiVal }: { label: string; algoVal: string;
       <div className="text-[11px] uppercase tracking-[0.18em] text-slate-500">{label}</div>
       <div className="mt-3 grid grid-cols-2 gap-3">
         <div className="rounded-2xl bg-indigo-50 p-3">
-          <div className="text-[10px] uppercase tracking-[0.16em] text-indigo-500">算法</div>
+          <div className="text-[10px] uppercase tracking-[0.16em] text-indigo-500">算法基线</div>
           <div className="mt-1 text-lg font-semibold text-indigo-700">{algoVal}</div>
         </div>
         <div className="rounded-2xl bg-amber-50 p-3">
-          <div className="text-[10px] uppercase tracking-[0.16em] text-amber-500">双 Agent</div>
+          <div className="text-[10px] uppercase tracking-[0.16em] text-amber-500">协同决策</div>
           <div className="mt-1 text-lg font-semibold text-amber-700">{aiVal ?? "—"}</div>
         </div>
       </div>
@@ -61,7 +61,7 @@ function fmtPct(v: number | undefined) {
 }
 
 function TradeTable({ trades }: { trades: Trade[] }) {
-  if (!trades.length) return <div className="py-4 text-center text-sm text-slate-400">暂无交易记录</div>;
+  if (!trades.length) return <div className="py-4 text-center text-sm text-slate-400">尚无交易记录</div>;
   return (
     <div className="overflow-x-auto">
       <table className="w-full text-sm">
@@ -94,7 +94,7 @@ function TradeTable({ trades }: { trades: Trade[] }) {
   );
 }
 
-function ScoreChips({ scores, title, tone }: { scores?: Record<string, number>; title: string; tone: "sub" | "main" | "weighted" }) {
+function ScoreChips({ scores, title, tone, nameMap }: { scores?: Record<string, number>; title: string; tone: "sub" | "main" | "weighted"; nameMap?: Record<string, string> }) {
   const classes =
     tone === "sub"
       ? "bg-emerald-100 text-emerald-700"
@@ -109,7 +109,7 @@ function ScoreChips({ scores, title, tone }: { scores?: Record<string, number>; 
       <div className="flex flex-wrap gap-2">
         {sorted.map(([code, score]) => (
           <span key={code} className={`rounded-full px-2.5 py-1 text-xs ${classes}`}>
-            {code.split(".")[0]} {score.toFixed(1)}
+            {nameMap?.[code] ?? code.split(".")[0]} {score.toFixed(1)}
           </span>
         ))}
       </div>
@@ -214,14 +214,19 @@ export default function ComparePage() {
   const ai = metrics?.ai;
   const hasAi = status?.agent_status === "completed" && ai != null;
 
+  const nameMap: Record<string, string> = {};
+  for (const d of decisions) {
+    for (const r of d.momentum_rankings) nameMap[r.ts_code] = r.name;
+  }
+
   return (
     <div className="min-h-screen bg-[radial-gradient(circle_at_top_right,_rgba(245,158,11,0.1),_transparent_24%),linear-gradient(180deg,_#fffdf8_0%,_#f8fafc_100%)]">
       <div className="mx-auto flex max-w-7xl flex-col gap-6 px-4 py-6">
         <section className="rounded-[32px] border border-amber-100 bg-[linear-gradient(135deg,_rgba(15,23,42,0.98),_rgba(120,53,15,0.94)_60%,_rgba(245,158,11,0.82))] p-6 text-white shadow-[0_24px_80px_rgba(15,23,42,0.18)]">
-          <div className="text-xs uppercase tracking-[0.22em] text-amber-200/80">Compare</div>
-          <h1 className="mt-3 text-3xl font-semibold md:text-4xl">算法基线 vs 双 Agent 加权裁决</h1>
+          <div className="text-xs uppercase tracking-[0.22em] text-amber-200/80">Strategy Compare</div>
+          <h1 className="mt-3 text-3xl font-semibold md:text-4xl">算法基线 vs 双 Agent 协同决策</h1>
           <p className="mt-4 max-w-3xl text-sm leading-6 text-amber-50/90">
-            新的 AI 回测不是单一大模型直接下单，而是先由本地 LM Studio 金融子 Agent 给建议，再由主 Agent 结合 60/40 评分完成最终调仓。
+            算法基线采用纯动量因子轮动策略；双 Agent 模式下，金融子 Agent（Fin-R1）先输出市场分析与仓位建议，主 Agent（GPT-5.4）再综合评分完成最终调仓，权重配比为 Fin-R1 60% / GPT-5.4 40%。
           </p>
         </section>
 
@@ -231,9 +236,9 @@ export default function ComparePage() {
               ? "border border-rose-200 bg-rose-50 text-rose-700"
               : "border border-amber-200 bg-amber-50 text-amber-700"
           }`}>
-            {status.agent_status === "pending" && "AI 回测等待启动..."}
-            {status.agent_status === "running" && "AI 回测进行中，完成后将自动刷新对比数据..."}
-            {status.agent_status === "failed" && `AI 回测失败: ${status.agent_error}`}
+            {status.agent_status === "pending" && "双 Agent 回测等待启动..."}
+            {status.agent_status === "running" && "双 Agent 回测运行中，完成后自动刷新对比数据..."}
+            {status.agent_status === "failed" && `双 Agent 回测异常：${status.agent_error}`}
           </div>
         )}
 
@@ -258,9 +263,9 @@ export default function ComparePage() {
                 <Tooltip
                   contentStyle={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: 16 }}
                   labelFormatter={formatDate}
-                  formatter={(v, name) => [`${Number(v).toLocaleString()} 元`, name === "algo_nav" ? "算法" : "双 Agent"]}
+                  formatter={(v, name) => [`${Number(v).toLocaleString()} 元`, name === "algo_nav" ? "算法基线" : "协同决策"]}
                 />
-                <Legend formatter={(v: string) => (v === "algo_nav" ? "算法策略" : "双 Agent 策略")} />
+                <Legend formatter={(v: string) => (v === "algo_nav" ? "算法基线" : "协同决策")} />
                 <Line type="monotone" dataKey="algo_nav" stroke="#4f46e5" strokeWidth={2.2} dot={false} name="algo_nav" />
                 {hasAi && <Line type="monotone" dataKey="ai_nav" stroke="#f59e0b" strokeWidth={2.2} dot={false} name="ai_nav" />}
               </LineChart>
@@ -279,9 +284,9 @@ export default function ComparePage() {
                 <Tooltip
                   contentStyle={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: 16 }}
                   labelFormatter={formatDate}
-                  formatter={(v, name) => [`${(Number(v) * 100).toFixed(2)}%`, name === "algo_drawdown" ? "算法" : "双 Agent"]}
+                  formatter={(v, name) => [`${(Number(v) * 100).toFixed(2)}%`, name === "algo_drawdown" ? "算法基线" : "协同决策"]}
                 />
-                <Legend formatter={(v: string) => (v === "algo_drawdown" ? "算法回撤" : "双 Agent 回撤")} />
+                <Legend formatter={(v: string) => (v === "algo_drawdown" ? "算法基线回撤" : "协同决策回撤")} />
                 <Area type="monotone" dataKey="algo_drawdown" stroke="#818cf8" fill="#c7d2fe40" strokeWidth={1.6} name="algo_drawdown" />
                 {hasAi && <Area type="monotone" dataKey="ai_drawdown" stroke="#f59e0b" fill="#fde68a50" strokeWidth={1.6} name="ai_drawdown" />}
               </AreaChart>
@@ -296,10 +301,10 @@ export default function ComparePage() {
               <thead>
                 <tr className="border-b border-slate-200 text-slate-500">
                   <th className="w-24 px-3 py-2 text-left">日期</th>
-                  <th className="px-3 py-2 text-left">算法配置</th>
-                  <th className="px-3 py-2 text-left">双 Agent 配置</th>
+                  <th className="px-3 py-2 text-left">算法基线配置</th>
+                  <th className="px-3 py-2 text-left">协同决策配置</th>
                   <th className="w-24 px-3 py-2 text-center">执行状态</th>
-                  <th className="w-16 px-3 py-2 text-center">一致</th>
+                  <th className="w-16 px-3 py-2 text-center">是否一致</th>
                   <th className="w-16 px-3 py-2 text-center">操作</th>
                 </tr>
               </thead>
@@ -311,9 +316,9 @@ export default function ComparePage() {
                     <Fragment key={decision.date}>
                       <tr className={`border-b border-slate-100 hover:bg-slate-50/60 ${rowBg}`}>
                         <td className="px-3 py-2 font-mono text-xs text-slate-600">{formatDate(decision.date)}</td>
-                        <td className="px-3 py-2 text-xs text-slate-700">{decision.algo ? formatWeights(decision.algo.target_weights) : "—"}</td>
+                        <td className="px-3 py-2 text-xs text-slate-700">{decision.algo ? formatWeights(decision.algo.target_weights, nameMap) : "—"}</td>
                         <td className="px-3 py-2 text-xs text-slate-700">
-                          {decision.ai ? formatWeights(decision.ai.target_weights) : hasAi ? "—" : "等待中..."}
+                          {decision.ai ? formatWeights(decision.ai.target_weights, nameMap) : hasAi ? "—" : "待完成"}
                         </td>
                         <td className="px-3 py-2 text-center text-xs text-slate-600">
                           {decision.ai?.execution_status ?? "—"}
@@ -339,7 +344,7 @@ export default function ComparePage() {
                             <div className="space-y-4 rounded-2xl border border-slate-200 bg-white p-4">
                               {decision.momentum_rankings.length > 0 && (
                                 <div>
-                                  <div className="mb-2 text-[10px] uppercase tracking-[0.14em] text-slate-400">类别代表动量排名</div>
+                                  <div className="mb-2 text-[10px] uppercase tracking-[0.14em] text-slate-400">资产类别动量排名</div>
                                   <div className="flex flex-wrap gap-2">
                                     {decision.momentum_rankings.map((ranking) => (
                                       <span
@@ -362,7 +367,7 @@ export default function ComparePage() {
                                   <div className="flex flex-wrap gap-2">
                                     {decision.weight_diffs.map((diff) => (
                                       <span key={diff.ts_code} className="rounded-full bg-amber-100 px-2.5 py-1 text-xs text-amber-700">
-                                        {diff.name}: 算法 {(diff.algo_weight * 100).toFixed(0)}% → 双 Agent {(diff.ai_weight * 100).toFixed(0)}%
+                                        {diff.name}: 算法基线 {(diff.algo_weight * 100).toFixed(0)}% → 协同决策 {(diff.ai_weight * 100).toFixed(0)}%
                                       </span>
                                     ))}
                                   </div>
@@ -372,30 +377,30 @@ export default function ComparePage() {
                               {decision.ai && (
                                 <div className="grid gap-4 lg:grid-cols-2">
                                   <div className="space-y-3 rounded-2xl border border-emerald-200 bg-emerald-50/80 p-4">
-                                    <div className="text-[10px] uppercase tracking-[0.16em] text-emerald-700">金融子 Agent</div>
+                                    <div className="text-[10px] uppercase tracking-[0.16em] text-emerald-700">金融子 Agent · Fin-R1</div>
                                     <div className="text-sm font-medium text-emerald-900">{decision.ai.sub_agent?.summary}</div>
                                     <div className="text-xs leading-6 text-emerald-800">{decision.ai.sub_agent?.reasoning}</div>
-                                    <ScoreChips title="子 Agent 评分" scores={decision.ai.sub_agent?.scores} tone="sub" />
-                                    <div className="text-xs text-emerald-900">建议仓位：{formatWeights(decision.ai.sub_agent?.weights ?? {})}</div>
+                                    <ScoreChips title="Fin-R1 评分" scores={decision.ai.sub_agent?.scores} tone="sub" nameMap={nameMap} />
+                                    <div className="text-xs text-emerald-900">建议配置：{formatWeights(decision.ai.sub_agent?.weights ?? {}, nameMap)}</div>
                                   </div>
 
                                   <div className="space-y-3 rounded-2xl border border-amber-200 bg-amber-50/80 p-4">
-                                    <div className="text-[10px] uppercase tracking-[0.16em] text-amber-700">主 Agent</div>
+                                    <div className="text-[10px] uppercase tracking-[0.16em] text-amber-700">主 Agent · GPT-5.4</div>
                                     <div className="text-sm font-medium text-amber-900">{decision.ai.main_agent?.summary}</div>
                                     <div className="text-xs leading-6 text-amber-800">{decision.ai.main_agent?.reasoning}</div>
-                                    <ScoreChips title="主 Agent 评分" scores={decision.ai.main_agent?.scores} tone="main" />
-                                    <div className="text-xs text-amber-900">最终仓位：{formatWeights(decision.ai.target_weights)}</div>
+                                    <ScoreChips title="GPT-5.4 评分" scores={decision.ai.main_agent?.scores} tone="main" nameMap={nameMap} />
+                                    <div className="text-xs text-amber-900">最终配置：{formatWeights(decision.ai.target_weights, nameMap)}</div>
                                   </div>
                                 </div>
                               )}
 
                               {decision.ai?.weighted_scores && (
-                                <ScoreChips title="60/40 加权评分" scores={decision.ai.weighted_scores} tone="weighted" />
+                                <ScoreChips title="60/40 加权评分" scores={decision.ai.weighted_scores} tone="weighted" nameMap={nameMap} />
                               )}
 
                               {decision.algo?.reasoning && (
                                 <div>
-                                  <div className="mb-1 text-[10px] uppercase tracking-[0.14em] text-indigo-400">算法决策理由</div>
+                                  <div className="mb-1 text-[10px] uppercase tracking-[0.14em] text-indigo-400">算法决策依据</div>
                                   <div className="rounded-xl border border-slate-100 bg-slate-50 p-3 text-xs text-slate-600">
                                     {decision.algo.reasoning}
                                   </div>
@@ -404,7 +409,7 @@ export default function ComparePage() {
 
                               {decision.ai?.reasoning && (
                                 <div>
-                                  <div className="mb-1 text-[10px] uppercase tracking-[0.14em] text-slate-500">双 Agent 最终理由</div>
+                                  <div className="mb-1 text-[10px] uppercase tracking-[0.14em] text-slate-500">协同决策依据</div>
                                   <div className="rounded-xl border border-slate-100 bg-slate-50 p-3 text-xs whitespace-pre-wrap text-slate-600">
                                     {decision.ai.reasoning}
                                   </div>
@@ -432,7 +437,7 @@ export default function ComparePage() {
                   tradeTab === "algo" ? "bg-indigo-100 text-indigo-700" : "text-slate-400 hover:text-slate-600"
                 }`}
               >
-                算法 ({trades?.algo_trades.length ?? 0})
+                算法基线 ({trades?.algo_trades.length ?? 0})
               </button>
               <button
                 onClick={() => setTradeTab("ai")}
@@ -440,7 +445,7 @@ export default function ComparePage() {
                   tradeTab === "ai" ? "bg-amber-100 text-amber-700" : "text-slate-400 hover:text-slate-600"
                 }`}
               >
-                双 Agent ({trades?.ai_trades.length ?? 0})
+                协同决策 ({trades?.ai_trades.length ?? 0})
               </button>
             </div>
           </div>

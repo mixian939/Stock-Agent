@@ -281,6 +281,8 @@ class DualAgentCoordinator:
         prompt = (
             "你是本地 LM Studio 运行的金融领域子 Agent，只负责给主 Agent 提供调仓建议，"
             "不能执行交易。请严格基于输入数据输出 JSON，不要输出 Markdown。\n"
+            "核心约束：只有动量 > 0 的 ETF 才允许买入，动量 <= 0 的标的不得分配仓位。"
+            "若所有候选标的动量均 <= 0，应建议全部转入安全资产。\n"
             "请返回字段：should_rebalance、weights、scores、summary、reasoning。\n"
             "scores 是对当前 7 个类别代表 ETF 的 0-100 打分，weights 为你的建议仓位。"
         )
@@ -323,6 +325,8 @@ class DualAgentCoordinator:
     def _get_main_agent_decision(self, snapshot: dict, sub_agent: AgentAdvice) -> AgentAdvice:
         prompt = (
             "你是主交易 Agent（gpt-5.4），负责最终调仓裁决。\n"
+            "核心约束：只有动量 > 0 的 ETF 才允许买入，动量 <= 0 的标的不得分配仓位。"
+            "若所有候选标的动量均 <= 0，应将全部资金转入安全资产。\n"
             "你必须先给出你自己的 0-100 打分，再结合金融子 Agent 的评分按固定权重计算："
             f"子 Agent {SUB_AGENT_WEIGHT:.0%}，主 Agent {MAIN_AGENT_WEIGHT:.0%}。\n"
             "然后根据加权评分和你的判断，决定是否调仓、调哪些 ETF、各自多少仓位。\n"

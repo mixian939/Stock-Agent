@@ -2,12 +2,17 @@
 
 from __future__ import annotations
 
+from datetime import datetime, timedelta
+
 from stock_agent.config import (
     INITIAL_CAPITAL,
     MAX_DRAWDOWN_STOP,
     STOP_COOLDOWN_DAYS,
     ETF_POOL,
     TOP_N,
+    DATA_START,
+    DATA_END,
+    BACKTEST_START,
 )
 from stock_agent.data.fetcher import DataFetcher
 from stock_agent.data.feed import MarketFeed
@@ -19,8 +24,18 @@ from stock_agent.agent.collaboration import DualAgentCoordinator
 
 
 class BacktestSimulator:
-    def __init__(self):
-        self.fetcher = DataFetcher()
+    def __init__(
+        self,
+        backtest_start: str | None = None,
+        data_end: str | None = None,
+    ):
+        self._backtest_start = backtest_start or BACKTEST_START
+        self._data_end = data_end or DATA_END
+        # data_start 往前推 2 个月，确保动量窗口有足够数据
+        bt = datetime.strptime(self._backtest_start, "%Y%m%d")
+        self._data_start = (bt - timedelta(days=60)).strftime("%Y%m%d")
+
+        self.fetcher = DataFetcher(start=self._data_start, end=self._data_end)
         self.portfolio = Portfolio(INITIAL_CAPITAL)
         self.tracker = PerformanceTracker(INITIAL_CAPITAL)
         self.logger = TradingLogger()
@@ -31,7 +46,7 @@ class BacktestSimulator:
     def _init_data(self):
         if self.all_data is None:
             self.all_data = self.fetcher.fetch_all()
-            self.feed = MarketFeed(self.all_data)
+            self.feed = MarketFeed(self.all_data, backtest_start=self._backtest_start)
 
     def run_headless(self) -> dict:
         """纯策略回测，无 LLM 调用。"""

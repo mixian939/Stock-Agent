@@ -177,4 +177,18 @@ export const api = {
   compareMetrics: () => fetchJSON<CompareMetrics>("/compare/metrics"),
   compareDecisions: () => fetchJSON<DecisionComparison[]>("/compare/decisions"),
   compareTrades: () => fetchJSON<CompareTrades>("/compare/trades"),
+
+  runBacktest: async (backtest_start: string, data_end: string): Promise<void> => {
+    const res = await fetch(`${BASE}/backtest/run`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ backtest_start, data_end }),
+    });
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      throw new Error(data.detail || `Backtest error: ${res.status}`);
+    }
+  },
+
+  health: () => fetchJSON<{ status: string; backtest_ready: boolean; agent_status: string }>("/health"),
 };

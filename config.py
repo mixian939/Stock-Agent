@@ -39,19 +39,19 @@ MAIN_AGENT_WEIGHT = 0.40
 # 2. 策略层会先在每个类别中选出 1 只代表 ETF，再在 7 个类别之间做轮动；
 # 3. 这样既扩大了 ETF 池，又保持了资产类别仍然只有 7 类。
 ETF_UNIVERSE: dict[str, dict[str, str]] = {
-    "510300.SH": {"name": "沪深300ETF", "category": "沪深300"},
-    "159919.SZ": {"name": "嘉实沪深300ETF", "category": "沪深300"},
-    "510500.SH": {"name": "中证500ETF", "category": "中证500"},
-    "159922.SZ": {"name": "嘉实中证500ETF", "category": "中证500"},
-    "159915.SZ": {"name": "创业板ETF", "category": "创业板"},
-    "159949.SZ": {"name": "创业板50ETF", "category": "创业板"},
-    "510880.SH": {"name": "红利ETF", "category": "红利"},
+    "510300.SH": {"name": "沪深300ETF华泰柏瑞", "category": "沪深300"},
+    "159919.SZ": {"name": "沪深300ETF嘉实", "category": "沪深300"},
+    "510500.SH": {"name": "中证500ETF南方", "category": "中证500"},
+    "159922.SZ": {"name": "中证500ETF嘉实", "category": "中证500"},
+    "159915.SZ": {"name": "创业板ETF易方达", "category": "创业板"},
+    "159949.SZ": {"name": "创业板50ETF华安", "category": "创业板"},
+    "510880.SH": {"name": "红利ETF华泰柏瑞", "category": "红利"},
     "515180.SH": {"name": "红利ETF易方达", "category": "红利"},
-    "511010.SH": {"name": "国债ETF", "category": "国债"},
-    "511260.SH": {"name": "十年国债ETF", "category": "国债"},
-    "518880.SH": {"name": "黄金ETF", "category": "黄金"},
+    "511010.SH": {"name": "国债ETF国泰", "category": "国债"},
+    "511260.SH": {"name": "十年国债ETF国泰", "category": "国债"},
+    "518880.SH": {"name": "黄金ETF华安", "category": "黄金"},
     "159934.SZ": {"name": "黄金ETF易方达", "category": "黄金"},
-    "513100.SH": {"name": "纳指100ETF", "category": "纳指100"},
+    "513100.SH": {"name": "纳指100ETF国泰", "category": "纳指100"},
     "159941.SZ": {"name": "纳指ETF广发", "category": "纳指100"},
 }
 
