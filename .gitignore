@@ -4,8 +4,7 @@ __pycache__/
 .venv/
 *.egg-info/
 
-# 数据缓存和日志
-data/cache/
+# 日志
 logs/
 
 # 前端
